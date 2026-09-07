@@ -1,0 +1,49 @@
+.layoutWrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.mainContent {
+  flex: 1;
+  margin-left: 260px; /* Width of the sidebar */
+  display: flex;
+  flex-direction: column;
+}
+
+.pageContent {
+  padding: 32px;
+  flex: 1;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .layoutWrapper {
+    flex-direction: column;
+  }
+  
+  .mainContent {
+    margin-left: 0;
+    margin-bottom: 70px; /* Space for bottom nav */
+  }
+
+  .pageContent {
+    padding: 16px;
+  }
+
+  .mobileBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 1999; /* Just below the sidebar which should be 2000 */
+    animation: fadeIn 0.3s ease-out forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}

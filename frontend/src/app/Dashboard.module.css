@@ -1,0 +1,796 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.greetingText {
+  font-weight: 500;
+}
+
+.headerTextContent {
+  display: block;
+}
+
+.headerActions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.searchContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 300px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-tertiary);
+}
+
+.searchInput {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border-color);
+  outline: none;
+  background-color: var(--surface-color);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.searchInput::placeholder {
+  color: var(--text-tertiary);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.mobileBreak {
+  display: none;
+}
+
+.sun {
+  font-size: 1.2rem;
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.date {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+}
+
+.statCard {
+  background-color: var(--surface-color);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.statIconWrapper {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.statTrendUp {
+  font-size: 0.7rem;
+  color: var(--status-success-text);
+  font-weight: 500;
+}
+
+.statTrendDown {
+  font-size: 0.7rem;
+  color: var(--status-danger-text);
+  font-weight: 500;
+}
+
+.mainGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 24px;
+}
+
+.card {
+  background-color: var(--surface-color);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.cardTitle {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+}
+
+.calendarNav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.calendarMonth {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.calendarNavButtons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.btnSecondary {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  padding: 6px 12px;
+  border-radius: var(--radius-btn);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.btnSecondary:hover {
+  background-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.btnPrimary {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 8px 16px;
+  border-radius: var(--radius-btn);
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+  cursor: pointer;
+  border: none;
+}
+
+.btnPrimary:hover {
+  background-color: var(--accent-color);
+}
+
+.primaryLink {
+  color: var(--primary-color);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.primaryLink:hover {
+  color: var(--accent-color);
+}
+
+.hearingList, .activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.hearingItem, .activityItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.hearingItem:last-child, .activityItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.hearingTime {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--accent-color);
+  font-weight: 600;
+  min-width: 48px;
+}
+
+.timeAmPm {
+  font-size: 0.7rem;
+}
+
+.hearingDetails {
+  flex: 1;
+}
+
+.caseId {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.caseName {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 2px 0;
+}
+
+.courtName {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.hearingStatus {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.badgeWarning {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
+}
+
+.badgeInfo {
+  background-color: var(--status-info-bg);
+  color: var(--status-info-text);
+}
+
+.badgeSuccess {
+  background-color: var(--status-success-bg);
+  color: var(--status-success-text);
+}
+
+.badgeDanger {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-text);
+}
+
+.pinIcon {
+  color: var(--text-tertiary);
+}
+
+.viewAll {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.viewAll:hover {
+  color: var(--text-primary);
+}
+
+.activityIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activityContent {
+  flex: 1;
+}
+
+.activityTitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.activityDesc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.activityTime {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+/* Calendar Styles */
+.calendarNav {
+  display: flex;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.calendarNav svg {
+  cursor: pointer;
+}
+
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.calendarDayName {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  margin-bottom: 8px;
+}
+
+.calendarDay {
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.calendarDay.inactive {
+  color: var(--text-tertiary);
+}
+
+.calendarDay.active {
+  background-color: var(--accent-color);
+  color: white;
+  font-weight: 600;
+}
+
+.calendarDay:hover:not(.active) {
+  background-color: var(--bg-color);
+}
+
+.todaySummary {
+  border-top: 1px solid var(--border-color);
+  padding-top: 16px;
+}
+
+.summaryTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.summaryItems {
+  display: flex;
+  gap: 16px;
+}
+
+.summaryItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* Tables Section */
+.tablesSection {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 24px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  text-align: left;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table td {
+  padding: 12px 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table td.primaryText {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.statusBadge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+}
+
+.statusBadge.active {
+  background-color: var(--status-success-bg);
+  color: var(--status-success-text);
+}
+
+.statusBadge.hearing {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
+}
+
+.statusBadge.pending {
+  background-color: var(--status-info-bg);
+  color: var(--status-info-text);
+}
+
+.statusBadge.inactive {
+  background-color: var(--border-color);
+  color: var(--text-secondary);
+}
+
+.statusBadge.overdue {
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-text);
+}
+
+.mobileOnly {
+  display: none;
+}
+
+.desktopOnly {
+  display: block;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* --- MOBILE SPECIFIC FIXES --- */
+
+.fab {
+  display: none;
+}
+
+/* Today's Hearings New Styles (Applies Desktop & Mobile) */
+.cardHeaderMobile {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.cardTitleMobile {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.btnViewAllMobile {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.hearingListMobile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.hearingItemMobile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+.hearingItemMobile:last-child {
+  border-bottom: none;
+}
+.hearingTimeBox {
+  background-color: var(--accent-light);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+}
+.timeValueBox {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.2;
+}
+.timeAmPmBox {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.hearingDetailsMobile {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.caseIdMobile {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.caseNameMobile {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+.courtNameMobile {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+.hearingStatusDotGreen {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--status-success-text);
+}
+.hearingStatusDotOrange {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--status-warning-text);
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    gap: 16px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  /* Make header action buttons row hide if it's the large desktop one, 
+     but the mockups just omit the primary desktop actions on mobile top */
+  .headerActionsDesktop {
+    display: none;
+  }
+
+  .title {
+    font-size: 1.25rem;
+  }
+
+  .headerTextContent {
+    display: none;
+  }
+
+  .headerActions {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .searchContainer {
+    width: 100%;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  /* Make the 5th stat card span full width to look better on 2-col */
+  /* Removed to arrange 6 cards evenly in 2x3 grid */
+
+  .mainGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .tablesSection {
+    grid-template-columns: 1fr;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .table {
+    display: none; /* Hide standard tables on mobile */
+  }
+
+  .mobileCardList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .mobileCard {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+
+  .mobileOnly {
+    display: flex;
+  }
+
+  .desktopOnly {
+    display: none !important;
+  }
+
+  .fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    position: fixed;
+    bottom: 90px;
+    right: 24px;
+    box-shadow: 0 4px 12px rgba(198, 161, 91, 0.4);
+    z-index: 999;
+    cursor: pointer;
+    border: none;
+  }
+
+  .mobileQuickActionsGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .mobileQuickActionCard {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+
+  .title {
+    font-size: 1.3rem;
+  }
+  
+  .mobileBreak {
+    display: block;
+  }
+  
+  .subtitle, .date {
+    display: none;
+  }
+  
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  
+  .statCard {
+    flex-direction: row;
+    padding: 16px 12px;
+    gap: 12px;
+    border-radius: 12px;
+  }
+  
+  .statIconWrapper {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+  }
+  
+  .statValue {
+    font-size: 1.1rem;
+    line-height: 1.2;
+  }
+  
+  .statLabel {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  
+  .statTrendUp, .statTrendDown {
+    display: none; /* Removed to match mockup exactly */
+  }
+}

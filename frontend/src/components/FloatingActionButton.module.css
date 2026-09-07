@@ -1,0 +1,110 @@
+.fabContainer {
+  display: none; /* Hidden by default (desktop) */
+}
+
+@media (max-width: 768px) {
+  .fabContainer {
+    display: block;
+    position: fixed;
+    bottom: 96px; /* Lifted above mobile nav */
+    right: 24px;
+    z-index: 9999;
+  }
+
+  .backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 9998;
+  }
+
+  .fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(198, 161, 91, 0.4);
+    cursor: pointer;
+    border: none;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s;
+    position: relative;
+    z-index: 10000;
+  }
+
+  .fab.fabOpen {
+    transform: rotate(90deg);
+    background-color: var(--accent-color);
+  }
+
+  .actionMenu {
+    position: absolute;
+    bottom: 72px;
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    pointer-events: none;
+    z-index: 10000;
+  }
+
+  .actionMenu.open {
+    pointer-events: auto;
+  }
+
+  .actionItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    transform: translateY(20px) scale(0.8);
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    visibility: hidden;
+  }
+
+  .actionMenu.open .actionItem {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Stagger animation for items */
+  .actionMenu.open .actionItem:nth-child(1) { transition-delay: 0.15s; }
+  .actionMenu.open .actionItem:nth-child(2) { transition-delay: 0.12s; }
+  .actionMenu.open .actionItem:nth-child(3) { transition-delay: 0.09s; }
+  .actionMenu.open .actionItem:nth-child(4) { transition-delay: 0.06s; }
+  .actionMenu.open .actionItem:nth-child(5) { transition-delay: 0.03s; }
+  .actionMenu.open .actionItem:nth-child(6) { transition-delay: 0s; }
+
+  .actionLabel {
+    background-color: white;
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    white-space: nowrap;
+  }
+
+  .actionIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background-color: white;
+    color: var(--primary-color);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+}
