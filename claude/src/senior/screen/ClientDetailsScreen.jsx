@@ -3,7 +3,7 @@ import {
   View, Text, SafeAreaView, ScrollView, TouchableOpacity,
   Linking, Alert, Modal, TextInput, FlatList
 } from 'react-native';
-import { User, Mail, Phone, MapPin, Briefcase, Calendar, Plus, X, Check, IndianRupee } from 'lucide-react-native';
+import { User, Mail, Phone, MapPin, Briefcase, Calendar, Plus, X, Check, CreditCard } from 'lucide-react-native';
 
 export default function ClientDetailsScreen({ route }) {
   const { clientData } = route.params;
@@ -148,7 +148,7 @@ export default function ClientDetailsScreen({ route }) {
           {/* Header */}
           <View className="flex-row items-center justify-between mb-4">
             <View className="flex-row items-center">
-              <IndianRupee size={20} color="#2563eb" />
+              <CreditCard size={20} color="#2563eb" />
               <Text className="text-base font-bold text-slate-900 ml-2">Payment Log</Text>
             </View>
             <TouchableOpacity
@@ -181,7 +181,7 @@ export default function ClientDetailsScreen({ route }) {
           {/* Empty state */}
           {payments.length === 0 ? (
             <View className="border border-dashed border-slate-200 rounded-xl p-10 items-center">
-              <IndianRupee size={28} color="#cbd5e1" />
+              <CreditCard size={28} color="#cbd5e1" />
               <Text className="text-slate-400 text-sm mt-2">No payments logged yet.</Text>
               <Text className="text-slate-400 text-xs mt-1">Tap "Add" to record a payment.</Text>
             </View>

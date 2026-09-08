@@ -52,7 +52,7 @@ const CustomHeader = ({ title, isProfile, showBack, onBackPress, onNotifPress, o
         ) : (
           <View className="p-1">
             <Image 
-              source={require('../../assets/icon.png')} 
+              source={require('../../assets/logo.png')} 
               className="w-8 h-8" 
               resizeMode="contain"
             />

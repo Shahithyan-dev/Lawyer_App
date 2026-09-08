@@ -4,15 +4,19 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  Image,
+  Dimensions
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Scale, User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react-native';
+import { User, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react-native';
 import { API_URL } from '../config/api';
+import Svg, { Path } from 'react-native-svg';
+
+const { width, height } = Dimensions.get('window');
 
 export default function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
@@ -32,106 +36,113 @@ export default function LoginScreen({ navigation }) {
 
     try {
       const res = await axios.post(`${API_URL}/auth/login`, { username, password });
-      
-      // Save tokens securely to device storage
-      await AsyncStorage.setItem('accessToken', res.data.accessToken);
-      if (res.data.refreshToken) {
-        await AsyncStorage.setItem('refreshToken', res.data.refreshToken);
-      }
-      // Also save the user ID so we can query for it later if needed
-      await AsyncStorage.setItem('userId', res.data._id);
-
-      navigation.replace('Dashboard', { user: res.data });
+      await AsyncStorage.setItem('accessToken', res.data.token || res.data.accessToken);
+      navigation.replace('Dashboard', { user: res.data.user });
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Check your network or credentials.');
+      setError(err.response?.data?.message || 'Login failed. Check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView
-      className="flex-1 bg-[#17211F]"
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <View className="flex-1 p-6 justify-center">
-        <View className="items-center mb-10">
-          <Scale size={48} color="#2563eb" />
-          <Text className="text-2xl font-bold text-white tracking-widest mt-3">LEXORA</Text>
-          <Text className="text-[10px] text-blue-600 tracking-[2px] mt-1">LAW MANAGEMENT SYSTEM</Text>
-        </View>
-
-        <View className="bg-white rounded-2xl p-6 shadow-md shadow-black/10 elevation-5">
-          <Text className="text-[22px] font-bold text-slate-800 mb-1 text-center">Welcome Back</Text>
-          <Text className="text-sm text-slate-500 mb-6 text-center">Sign in to your Lexora account</Text>
-
-          {error && (
-            <View className="bg-red-100 p-3 rounded-lg mb-4">
-              <Text className="text-red-700 text-[13px] text-center">{error}</Text>
-            </View>
-          )}
-
-          <View className="flex-row items-center border border-slate-200 rounded-lg mb-4 h-[52px] bg-slate-50">
-            <View className="px-3">
-              <User size={20} color="#94a3b8" />
-            </View>
-            <TextInput
-              className="flex-1 h-full text-slate-800 text-[15px]"
-              placeholder="Email or Username"
-              placeholderTextColor="#94a3b8"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View className="flex-row items-center border border-slate-200 rounded-lg mb-4 h-[52px] bg-slate-50">
-            <View className="px-3">
-              <Lock size={20} color="#94a3b8" />
-            </View>
-            <TextInput
-              className="flex-1 h-full text-slate-800 text-[15px]"
-              placeholder="Password"
-              placeholderTextColor="#94a3b8"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity
-              className="px-3"
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <Eye size={20} color="#94a3b8" /> : <EyeOff size={20} color="#94a3b8" />}
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity className="self-end mb-6">
-            <Text className="text-blue-600 text-sm font-semibold">Forgot Password?</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            className="bg-blue-600 h-[52px] rounded-lg flex-row items-center justify-center gap-2" 
-            onPress={handleLogin} 
-            disabled={loading}
-          >
-            {loading ? <ActivityIndicator color="#fff" /> : (
-              <>
-                <Text className="text-white text-base font-bold">Sign In</Text>
-                <ArrowRight size={20} color="#fff" />
-              </>
-            )}
-          </TouchableOpacity>
-
-          {/* Temporary Dev Button */}
-          <TouchableOpacity
-            className="bg-slate-900 h-[52px] rounded-lg flex-row items-center justify-center gap-2 mt-3"
-            onPress={() => navigation.navigate('StaffDashboard')}
-          >
-            <Text className="text-white text-base font-bold">Staff Demo Login</Text>
-            <ArrowRight size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
+    <View className="flex-1 bg-white">
+      
+      {/* Top Left Swoosh SVG */}
+      <View className="absolute top-0 left-0" style={{ zIndex: 1 }}>
+        <Svg width={width * 0.7} height={180} viewBox="0 0 250 180">
+          <Path d="M0,0 L250,0 C180,80 100,140 0,160 Z" fill="#0f172a" />
+          <Path d="M0,160 C100,140 180,80 250,0 C250,20 200,120 0,180 Z" fill="#b48d3d" />
+        </Svg>
       </View>
-    </KeyboardAvoidingView>
+
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View className="flex-1 px-8 pt-24 pb-8 justify-between" style={{ zIndex: 10 }}>
+          
+          <View>
+            {/* Logo Section */}
+            <View className="items-center mb-10 mt-6">
+              <View className="w-[100px] h-[100px] rounded-full overflow-hidden items-center justify-center bg-[#0f172a] shadow-lg mb-4">
+                <Image 
+                  source={require('../../assets/logo.png')} 
+                  style={{ width: 140, height: 140, resizeMode: 'cover' }}
+                />
+              </View>
+              <Text className="text-[26px] font-black text-[#0f172a] tracking-widest mt-1" style={{ fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' }}>KETHU KOTAI</Text>
+              <View className="w-12 h-[1px] bg-[#b48d3d] my-1" />
+              <Text className="text-[13px] text-[#b48d3d] tracking-widest mt-1 italic" style={{ fontFamily: Platform.OS === 'ios' ? 'Times New Roman' : 'serif' }}>Vaimaieh Vellum</Text>
+            </View>
+
+            {/* Login Form Section */}
+            <View className="mb-4">
+              <Text className="text-[24px] font-bold text-[#0f172a] mb-1">Login</Text>
+              <Text className="text-[14px] text-slate-500 mb-6 leading-5">Access your account to manage your cases, clients and more.</Text>
+
+              {error && (
+                <View className="bg-red-50 border border-red-100 p-3 rounded-xl mb-6">
+                  <Text className="text-red-600 text-[13px] text-center font-medium">{error}</Text>
+                </View>
+              )}
+
+              <View className="flex-row items-center border border-slate-200 rounded-xl mb-4 h-[54px] px-4 bg-white">
+                <User size={18} color="#94a3b8" strokeWidth={1.5} />
+                <TextInput
+                  className="flex-1 h-full text-[#0f172a] text-[15px] ml-3"
+                  placeholder="Email or Mobile Number"
+                  placeholderTextColor="#cbd5e1"
+                  value={username}
+                  onChangeText={setUsername}
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View className="flex-row items-center border border-slate-200 rounded-xl mb-3 h-[54px] px-4 bg-white">
+                <Lock size={18} color="#94a3b8" strokeWidth={1.5} />
+                <TextInput
+                  className="flex-1 h-full text-[#0f172a] text-[15px] ml-3"
+                  placeholder="Password"
+                  placeholderTextColor="#cbd5e1"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                  {showPassword ? <Eye size={18} color="#94a3b8" strokeWidth={1.5} /> : <EyeOff size={18} color="#94a3b8" strokeWidth={1.5} />}
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity className="self-end mb-6 py-2">
+                <Text className="text-[#1d4ed8] text-[13px] font-bold">Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                className="bg-[#0f172a] h-[54px] rounded-xl flex-row items-center justify-center gap-2 shadow-md shadow-black/20" 
+                onPress={handleLogin} 
+                disabled={loading}
+              >
+                {loading ? <ActivityIndicator color="#fff" /> : (
+                  <>
+                    <Text className="text-white text-[15px] font-semibold tracking-wide">Login</Text>
+                    <ArrowRight size={18} color="#fff" />
+                  </>
+                )}
+              </TouchableOpacity>
+
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+
+      {/* Bottom Right Swoosh SVG */}
+      <View className="absolute bottom-0 right-0" style={{ zIndex: 1 }}>
+        <Svg width={width * 0.7} height={120} viewBox="0 0 250 120">
+          <Path d="M250,120 L0,120 C80,60 160,20 250,0 Z" fill="#0f172a" />
+          <Path d="M250,0 C160,20 80,60 0,120 C30,90 120,0 250,0 Z" fill="#b48d3d" />
+        </Svg>
+      </View>
+    </View>
   );
 }

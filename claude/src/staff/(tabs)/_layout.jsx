@@ -21,7 +21,7 @@ const StaffHeader = ({ title, navigation }) => {
       <View className="flex-row items-center justify-between px-4 py-3">
         <View className="p-1">
           <Image 
-            source={require('../../../assets/icon.png')} 
+            source={require('../../../assets/logo.png')} 
             className="w-8 h-8" 
             resizeMode="contain"
           />
