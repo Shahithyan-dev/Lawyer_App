@@ -1,15 +1,42 @@
-import React, { useRef, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, Image, SafeAreaView, Alert, Animated, Modal, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useRef, useState, useCallback } from 'react';
+import { View, Text, TouchableOpacity, ScrollView, Image, Alert, Animated, Modal, Pressable } from 'react-native';
 import { User, Lock, Bell, Settings, HelpCircle, LogOut, ChevronRight, Camera, ChevronLeft, Edit2, Image as ImageIcon, Camera as CameraIcon } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
+import { API_URL } from '../../config/api';
 
 export default function ProfileDashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const spinAnim = useRef(new Animated.Value(0)).current;
   const [profileImage, setProfileImage] = useState('https://randomuser.me/api/portraits/men/32.jpg');
   const [isActionSheetVisible, setActionSheetVisible] = useState(false);
+  const [userProfile, setUserProfile] = useState({
+    name: 'Loading...',
+    role: '...',
+    email: '...',
+    phone: '...'
+  });
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchProfileData();
+    }, [])
+  );
+
+  const fetchProfileData = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/me`);
+      if (response.data) {
+        setUserProfile(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching profile dashboard data:', error);
+    }
+  };
 
   React.useEffect(() => {
     const loadProfileImage = async () => {
@@ -28,7 +55,7 @@ export default function ProfileDashboardScreen({ navigation }) {
   const pickImage = async (useCamera = false) => {
     let result;
     const options = {
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1], // Square aspect ratio for the circular avatar
       quality: 0.8,
@@ -105,8 +132,9 @@ export default function ProfileDashboardScreen({ navigation }) {
         <View className="bg-white rounded-2xl py-8 items-center mb-6 border border-slate-100 shadow-sm shadow-black/5 elevation-2">
           <View className="relative mb-4">
             <Image 
-              source={{ uri: profileImage }} 
+              source={{ uri: profileImage || 'https://randomuser.me/api/portraits/men/32.jpg' }} 
               className="w-[120px] h-[120px] rounded-full border-4 border-white shadow-sm shadow-black/10 elevation-4" 
+              onError={() => setProfileImage('https://randomuser.me/api/portraits/men/32.jpg')}
             />
             <TouchableOpacity 
               activeOpacity={0.9}
@@ -121,10 +149,10 @@ export default function ProfileDashboardScreen({ navigation }) {
             </TouchableOpacity>
           </View>
           
-          <Text className="text-2xl font-bold text-[#001f3f] font-serif mb-1">Advocate Kumar</Text>
-          <Text className="text-base text-slate-500 mb-2">Senior Advocate</Text>
-          <Text className="text-[15px] text-slate-500 mb-1">kumarlawchambers@gmail.com</Text>
-          <Text className="text-[15px] text-slate-500">+91 98765 43210</Text>
+          <Text className="text-2xl font-bold text-[#001f3f] font-serif mb-1">{userProfile.name}</Text>
+          <Text className="text-base text-slate-500 mb-2">{userProfile.role}</Text>
+          <Text className="text-[15px] text-slate-500 mb-1">{userProfile.email}</Text>
+          <Text className="text-[15px] text-slate-500">{userProfile.phone}</Text>
         </View>
 
         {/* Menu Items */}
@@ -158,7 +186,11 @@ export default function ProfileDashboardScreen({ navigation }) {
             icon={LogOut} 
             title="Logout" 
             isDanger 
-            onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Login' }] })} 
+            onPress={async () => {
+              await AsyncStorage.removeItem('accessToken');
+              await AsyncStorage.removeItem('user');
+              navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+            }} 
           />
         </View>
 

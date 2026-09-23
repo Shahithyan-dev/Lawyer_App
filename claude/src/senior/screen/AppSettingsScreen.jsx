@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { ChevronLeft, ChevronDown, Check } from 'lucide-react-native';
 
 const Checkbox = ({ checked, onChange }) => (

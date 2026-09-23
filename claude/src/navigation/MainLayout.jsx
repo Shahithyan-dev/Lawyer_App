@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet, ScrollView, Dimensions, Image, Animated, Easing, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { 
   LayoutDashboard, 
@@ -39,22 +39,23 @@ import NotificationsScreen from '../senior/more/NotificationsScreen';
 const Tab = createBottomTabNavigator();
 const { height, width } = Dimensions.get('window');
 
-const CustomHeader = ({ title, isProfile, showBack, onBackPress, onNotifPress, onProfilePress, onEditPress, profileImage }) => {
+const CustomHeader = ({ title, isProfile = false, showBack = false, onBackPress, onNotifPress, onProfilePress, onEditPress, profileImage, onImageError }) => {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
   
   return (
-    <View style={{ backgroundColor: '#fff', paddingTop: insets.top }}>
+    <View className="bg-white" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center justify-between px-4 py-3">
         {showBack ? (
-          <TouchableOpacity onPress={onBackPress} className="p-2">
+          <TouchableOpacity onPress={onBackPress} className="p-2 -ml-2">
             <ChevronLeft size={28} color="#0f172a" strokeWidth={2.5} />
           </TouchableOpacity>
         ) : (
-          <View className="p-1">
+          <View className="w-10 h-10 rounded-full bg-[#0f172a] overflow-hidden items-center justify-center border-2 border-[#b48d3d]">
             <Image 
               source={require('../../assets/logo.png')} 
-              className="w-8 h-8" 
-              resizeMode="contain"
+              className="w-10 h-10 rounded-full" 
+              resizeMode="cover"
             />
           </View>
         )}
@@ -76,6 +77,7 @@ const CustomHeader = ({ title, isProfile, showBack, onBackPress, onNotifPress, o
                 <Image 
                   source={{ uri: profileImage || 'https://randomuser.me/api/portraits/men/32.jpg' }} 
                   className="w-9 h-9 rounded-full border-2 border-blue-200" 
+                  onError={onImageError}
                 />
               </TouchableOpacity>
             </>
@@ -169,6 +171,7 @@ export default function MainLayout({ navigation }) {
                 showBack={route.name !== 'Home'}
                 onBackPress={() => tabNavigation.navigate('Home')}
                 profileImage={profileImage}
+                onImageError={() => setProfileImage(null)}
                 onNotifPress={() => tabNavigation.navigate('Notifications')}
                 onProfilePress={() => navigation.navigate('ProfileDashboard')}
                 onEditPress={() => console.log('Edit Profile')}

@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, SafeAreaView, TextInput, Linking } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, Linking } from 'react-native';
 import { Search, Plus, Phone, Mail } from 'lucide-react-native';
 
 const MOCK_CLIENTS = [

@@ -94,7 +94,7 @@ const DropdownField = ({ label, value, options, onSelect, required, searchable =
 };
 
 const CASE_CATEGORIES = {
-  'Civil (CPU/PL)': [
+  'Civil': [
     'Principal Munsif',
     'Munsif (below 1 lakh)',
     'Sub court (1 - 10 lakh)',
@@ -145,10 +145,10 @@ const CASE_TITLES = [
   { label: 'Negotiable Instruments Act Sec 138 (Cheque Bounce)', value: 'NI Act Sec 138 (Cheque Bounce)', type: 'Criminal' },
   
   // Civil
-  { label: 'Property Dispute', value: 'Property Dispute', type: 'Civil (CPU/PL)' },
-  { label: 'Breach of Contract', value: 'Breach of Contract', type: 'Civil (CPU/PL)' },
-  { label: 'Injunction', value: 'Injunction', type: 'Civil (CPU/PL)' },
-  { label: 'Specific Performance', value: 'Specific Performance', type: 'Civil (CPU/PL)' },
+  { label: 'Property Dispute', value: 'Property Dispute', type: 'Civil' },
+  { label: 'Breach of Contract', value: 'Breach of Contract', type: 'Civil' },
+  { label: 'Injunction', value: 'Injunction', type: 'Civil' },
+  { label: 'Specific Performance', value: 'Specific Performance', type: 'Civil' },
   
   // Special Court
   { label: 'POCSO Act (Child Protection)', value: 'POCSO Act (Child Protection)', type: 'Special Court' },
@@ -196,16 +196,16 @@ export default function FileNewCaseScreen({ navigation }) {
 
   // Case State
   const [caseTitle, setCaseTitle] = useState('');
-  const [caseType, setCaseType] = useState('Civil (CPU/PL)');
+  const [caseType, setCaseType] = useState('Civil');
   const [courtName, setCourtName] = useState('');
-  const [caseStatus, setCaseStatus] = useState('Active');
+  const [caseStatus, setCaseStatus] = useState('Open');
   const [hearingDate, setHearingDate] = useState('');
 
   // Assign Case State
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState('');
-  const [priority, setPriority] = useState('NORMAL');
+  const [priority, setPriority] = useState('Medium');
 
   const [savedCaseId, setSavedCaseId] = useState(null);
 
@@ -254,28 +254,31 @@ export default function FileNewCaseScreen({ navigation }) {
       // 2. Create Case
       const casePayload = {
         title: caseTitle, type: caseType, court: courtName,
-        client: savedClient._id, status: caseStatus, nextHearing: hearingDate || null
+        client: savedClient._id, status: caseStatus, nextHearing: hearingDate || null,
+        caseNumber: `CASE-${Math.floor(Date.now() / 1000)}`,
+        assignedTo: [assignedTo]
       };
       const caseRes = await axios.post(`${API_URL}/cases`, casePayload);
       const savedCase = caseRes.data;
 
       // 3. Assign Task
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', taskTitle || caseTitle);
-      formDataToSend.append('description', taskDescription);
-      formDataToSend.append('caseReference', savedCase._id);
-      formDataToSend.append('priority', priority);
-      formDataToSend.append('status', 'To Do');
-      formDataToSend.append('assignedTo', assignedTo);
+      const taskPayload = {
+        title: taskTitle || caseTitle,
+        description: taskDescription,
+        relatedCase: savedCase._id,
+        relatedClient: savedClient._id,
+        priority: priority,
+        status: 'Pending',
+        assignedTo: assignedTo
+      };
 
-      await axios.post(`${API_URL}/tasks`, formDataToSend, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      await axios.post(`${API_URL}/tasks`, taskPayload);
       
       setShowSuccessModal(true);
     } catch (error) {
       console.error('Error saving data:', error);
-      Alert.alert('Error', 'Failed to save to the database. Please check your connection and try again.');
+      const serverMessage = error.response?.data?.message || error.message || 'Unknown error';
+      Alert.alert('Error', `Failed to save to the database. Server says: ${serverMessage}`);
     } finally {
       setLoading(false);
     }
@@ -294,9 +297,10 @@ export default function FileNewCaseScreen({ navigation }) {
 
   const userOptions = users.map(u => ({ label: `${u.name} (${u.role})`, value: u._id }));
   const priorityOptions = [
-    { label: 'LOW', value: 'LOW' },
-    { label: 'NORMAL', value: 'NORMAL' },
-    { label: 'HIGH PRIORITY', value: 'HIGH PRIORITY' },
+    { label: 'Low', value: 'Low' },
+    { label: 'Medium', value: 'Medium' },
+    { label: 'High', value: 'High' },
+    { label: 'Urgent', value: 'Urgent' },
   ];
 
   return (

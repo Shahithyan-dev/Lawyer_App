@@ -8,7 +8,8 @@ import {
   Platform,
   ActivityIndicator,
   Image,
-  Dimensions
+  Dimensions,
+  Alert
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -37,9 +38,38 @@ export default function LoginScreen({ navigation }) {
     try {
       const res = await axios.post(`${API_URL}/auth/login`, { username, password });
       await AsyncStorage.setItem('accessToken', res.data.token || res.data.accessToken);
-      navigation.replace('Dashboard', { user: res.data.user });
+      await AsyncStorage.setItem('user', JSON.stringify(res.data.user));
+      const role = res.data.user.role;
+      if (role === 'admin' || role === 'Senior Advocate' || role === 'Admin') {
+        navigation.replace('Dashboard', { user: res.data.user });
+      } else {
+        navigation.replace('StaffDashboard', { user: res.data.user });
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed. Check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!username) {
+      setError('Please enter your email to reset your password');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await axios.post(`${API_URL}/auth/forgot-password`, { username });
+      Alert.alert(
+        'Password Reset Successful', 
+        res.data?.message || 'Your password has been reset to password123. Please login.',
+        [{ text: 'OK' }]
+      );
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to reset password. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -114,7 +144,7 @@ export default function LoginScreen({ navigation }) {
                 </TouchableOpacity>
               </View>
 
-              <TouchableOpacity className="self-end mb-6 py-2">
+              <TouchableOpacity className="self-end mb-6 py-2" onPress={handleForgotPassword} disabled={loading}>
                 <Text className="text-[#1d4ed8] text-[13px] font-bold">Forgot Password?</Text>
               </TouchableOpacity>
 

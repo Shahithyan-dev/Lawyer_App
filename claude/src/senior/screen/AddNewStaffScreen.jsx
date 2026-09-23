@@ -76,7 +76,7 @@ export default function AddNewStaffScreen({ navigation }) {
 
   const [formData, setFormData] = useState({
     name: '',
-    username: '',
+    email: '',
     password: '',
     role: 'Junior Advocate',
     supervisor: ''
@@ -96,8 +96,14 @@ export default function AddNewStaffScreen({ navigation }) {
   };
 
   const handleSave = async () => {
-    if (!formData.name.trim() || !formData.username.trim() || !formData.password) {
+    if (!formData.name.trim() || !formData.email.trim() || !formData.password) {
       Alert.alert('Validation Error', 'Please fill all required fields.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      Alert.alert('Validation Error', 'Please enter a valid full email address (e.g., name@example.com).');
       return;
     }
 
@@ -105,7 +111,6 @@ export default function AddNewStaffScreen({ navigation }) {
     try {
       const res = await axios.post(`${API_URL}/users`, {
         ...formData,
-        email: `${formData.username.toLowerCase().replace(/\s+/g, '')}@lexora.com`
       });
 
       Alert.alert('Success', 'Staff member added successfully!', [
@@ -163,10 +168,10 @@ export default function AddNewStaffScreen({ navigation }) {
             />
 
             <InputField
-              label="Lawyer ID / Username"
-              placeholder="e.g. LEX-1001"
-              value={formData.username}
-              onChangeText={(text) => handleChange('username', text)}
+              label="Email Address"
+              placeholder="e.g. jdoe@example.com"
+              value={formData.email}
+              onChangeText={(text) => handleChange('email', text)}
               required
             />
 

@@ -1,13 +1,14 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, SafeAreaView, TextInput, Linking, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, TextInput, Linking, ActivityIndicator } from 'react-native';
 import { Search, Filter, Plus, Calendar, Phone, Mail } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 
-export default function CasesScreen({ navigation }) {
-  const [viewMode, setViewMode] = useState('Cases');
-  const [activeTab, setActiveTab] = useState('Active');
+export default function CasesScreen({ navigation, route }) {
+  const [viewMode, setViewMode] = useState(route.params?.initialView || 'Cases');
+  const [activeTab, setActiveTab] = useState(route.params?.initialTab || 'Active');
   
   const [cases, setCases] = useState([]);
   const [clients, setClients] = useState([]);
@@ -32,13 +33,20 @@ export default function CasesScreen({ navigation }) {
   useFocusEffect(
     useCallback(() => {
       fetchCasesAndClients();
-    }, [])
+      if (route.params?.initialView) setViewMode(route.params.initialView);
+      if (route.params?.initialTab) setActiveTab(route.params.initialTab);
+    }, [route.params])
   );
   
   const handleCall = (phone) => Linking.openURL(`tel:${phone}`);
   const handleEmail = (email) => Linking.openURL(`mailto:${email}`);
 
-  const filteredCases = cases.filter(c => c.status === activeTab);
+  const filteredCases = cases.filter(c => {
+    if (activeTab === 'Active') {
+      return c.status === 'Open' || c.status === 'In Progress';
+    }
+    return c.status === activeTab;
+  });
   
   const renderCase = ({ item }) => (
     <TouchableOpacity 
@@ -93,11 +101,11 @@ export default function CasesScreen({ navigation }) {
       <View className="flex-row border-t border-slate-100 pt-3 mt-3">
         <TouchableOpacity className="flex-row items-center flex-1 justify-center" onPress={() => handleCall(item.mobile)}>
           <Phone size={16} color="#64748b" />
-          <Text className="text-[13px] color-slate-500 ml-2 font-medium">{item.mobile}</Text>
+          <Text className="text-[13px] text-slate-500 ml-2 font-medium">{item.mobile}</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-row items-center flex-1 justify-center" onPress={() => handleEmail(item.email)}>
           <Mail size={16} color="#64748b" />
-          <Text className="text-[13px] color-slate-500 ml-2 font-medium">Email</Text>
+          <Text className="text-[13px] text-slate-500 ml-2 font-medium">Email</Text>
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -133,13 +141,13 @@ export default function CasesScreen({ navigation }) {
         {/* Top-Level Toggle */}
         <View className="flex-row bg-slate-200 rounded-xl p-1 mb-4">
           <TouchableOpacity 
-            className={`flex-1 py-2 items-center rounded-lg ${viewMode === 'Cases' ? 'bg-white shadow-sm elevation-2' : ''}`} 
+            className={`flex-1 py-2 items-center rounded-lg ${viewMode === 'Cases' ? 'bg-white' : ''}`} 
             onPress={() => setViewMode('Cases')}
           >
             <Text className={`text-sm font-semibold ${viewMode === 'Cases' ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>Cases</Text>
           </TouchableOpacity>
           <TouchableOpacity 
-            className={`flex-1 py-2 items-center rounded-lg ${viewMode === 'Clients' ? 'bg-white shadow-sm elevation-2' : ''}`} 
+            className={`flex-1 py-2 items-center rounded-lg ${viewMode === 'Clients' ? 'bg-white' : ''}`} 
             onPress={() => setViewMode('Clients')}
           >
             <Text className={`text-sm font-semibold ${viewMode === 'Clients' ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>Clients</Text>
@@ -150,7 +158,10 @@ export default function CasesScreen({ navigation }) {
         {viewMode === 'Cases' && (
           <View className="flex-row border-b border-slate-200 mb-4">
             {['Active', 'Pending', 'Closed'].map(tab => {
-              const count = cases.filter(c => c.status === tab).length;
+              const count = cases.filter(c => {
+                if (tab === 'Active') return c.status === 'Open' || c.status === 'In Progress';
+                return c.status === tab;
+              }).length;
               return (
                 <TouchableOpacity key={tab} onPress={() => setActiveTab(tab)} className={`py-3 mr-6 ${activeTab === tab ? 'border-b-2 border-blue-600' : ''}`}>
                   <Text className={`text-sm font-medium ${activeTab === tab ? 'text-blue-600 font-bold' : 'text-slate-500'}`}>
@@ -167,16 +178,29 @@ export default function CasesScreen({ navigation }) {
           <View className="flex-1 justify-center items-center">
             <ActivityIndicator size="large" color="#2563eb" />
           </View>
-        ) : (
+        ) : viewMode === 'Cases' ? (
           <FlatList
-            data={viewMode === 'Cases' ? filteredCases : clients}
+            data={filteredCases}
             keyExtractor={item => item._id}
-            renderItem={viewMode === 'Cases' ? renderCase : renderClient}
+            renderItem={renderCase}
             contentContainerClassName="pb-10"
             showsVerticalScrollIndicator={false}
             ListEmptyComponent={
               <View className="items-center py-10">
-                <Text className="text-slate-400 text-base">No {viewMode.toLowerCase()} found.</Text>
+                <Text className="text-slate-400 text-base">No cases found.</Text>
+              </View>
+            }
+          />
+        ) : (
+          <FlatList
+            data={clients}
+            keyExtractor={item => item._id}
+            renderItem={renderClient}
+            contentContainerClassName="pb-10"
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View className="items-center py-10">
+                <Text className="text-slate-400 text-base">No clients found.</Text>
               </View>
             }
           />

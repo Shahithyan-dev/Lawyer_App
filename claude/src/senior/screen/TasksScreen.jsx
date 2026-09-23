@@ -5,16 +5,17 @@ import { Plus, CheckSquare, Clock } from 'lucide-react-native';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
 
-export default function TasksScreen({ navigation }) {
+export default function TasksScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [filter, setFilter] = useState('All'); // All, Pending, Completed
+  const [filter, setFilter] = useState(route.params?.initialFilter || 'All'); // All, Pending, Completed
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+    if (route.params?.initialFilter) setFilter(route.params.initialFilter);
+  }, [route.params]);
 
   const fetchTasks = async () => {
     try {

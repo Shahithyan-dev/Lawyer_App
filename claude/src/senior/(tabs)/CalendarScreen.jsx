@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React, { useState, useCallback } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import { Clock, MapPin, ChevronRight, Plus } from 'lucide-react-native';
 import { useFocusEffect } from '@react-navigation/native';
@@ -29,8 +30,8 @@ export default function CalendarScreen({ navigation }) {
 
       // Map Cases (Hearings)
       casesRes.data.forEach(c => {
-        if (c.nextHearing) {
-          const dateKey = getLocalDateString(new Date(c.nextHearing));
+        if (c.nextHearingDate) {
+          const dateKey = getLocalDateString(new Date(c.nextHearingDate));
           if (!fetchedEvents[dateKey]) fetchedEvents[dateKey] = [];
           
           fetchedEvents[dateKey].push({
@@ -99,7 +100,7 @@ export default function CalendarScreen({ navigation }) {
           </View>
           <TouchableOpacity 
             className="w-11 h-11 bg-blue-600 rounded-xl items-center justify-center"
-            onPress={() => navigation.navigate('AddNewTask')}
+            onPress={() => navigation.navigate('AddEvent')}
           >
             <Plus size={20} color="#fff" />
           </TouchableOpacity>

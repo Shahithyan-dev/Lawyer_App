@@ -31,6 +31,7 @@ import ProfileDashboardScreen from './src/senior/more/ProfileDashboardScreen';
 import WorkspaceScreen from './src/senior/more/WorkspaceScreen';
 import AddNewStaffScreen from './src/senior/screen/AddNewStaffScreen';
 import AddNewTaskScreen from './src/senior/screen/AddNewTaskScreen';
+import AddEventScreen from './src/senior/screen/AddEventScreen';
 import CaseDetailsScreen from './src/senior/screen/CaseDetailsScreen';
 import ClientDetailsScreen from './src/senior/screen/ClientDetailsScreen';
 
@@ -53,15 +54,19 @@ export default function App() {
 
     const checkAuth = async () => {
       try {
-        // Clear token so we can see the Login screen
-        await AsyncStorage.removeItem('accessToken');
-
-        const [token] = await Promise.all([
+        const [token, userStr] = await Promise.all([
           AsyncStorage.getItem('accessToken'),
+          AsyncStorage.getItem('user'),
           new Promise(resolve => setTimeout(resolve, 3000)) // Force splash screen to stay for 3.0s
         ]);
-        if (token) {
-          setInitialRoute('Dashboard');
+        if (token && userStr) {
+          const user = JSON.parse(userStr);
+          const role = user.role;
+          if (role === 'admin' || role === 'Senior Advocate' || role === 'Admin') {
+            setInitialRoute('Dashboard');
+          } else {
+            setInitialRoute('StaffDashboard');
+          }
         }
       } catch (error) {
         console.error('Error checking auth token', error);
@@ -121,6 +126,7 @@ export default function App() {
             <Stack.Screen name="Workspace" component={WorkspaceScreen} />
             <Stack.Screen name="AddNewStaff" component={AddNewStaffScreen} />
             <Stack.Screen name="AddNewTask" component={AddNewTaskScreen} />
+            <Stack.Screen name="AddEvent" component={AddEventScreen} />
             <Stack.Screen name="CaseDetails" component={CaseDetailsScreen} />
             <Stack.Screen name="ClientDetails" component={ClientDetailsScreen} />
           </Stack.Navigator>

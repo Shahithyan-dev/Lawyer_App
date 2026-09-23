@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, SafeAreaView, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity,
   Linking, Alert, Modal, TextInput, FlatList
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { User, Mail, Phone, MapPin, Briefcase, Calendar, Plus, X, Check, CreditCard } from 'lucide-react-native';
 
 export default function ClientDetailsScreen({ route }) {

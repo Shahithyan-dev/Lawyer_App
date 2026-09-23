@@ -1,5 +1,6 @@
+import { SafeAreaView } from 'react-native-safe-area-context';
 import React from 'react';
-import { View, Text, FlatList, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity } from 'react-native';
 import { Bell, FileText, Calendar as CalendarIcon } from 'lucide-react-native';
 
 const MOCK_NOTIFICATIONS = [

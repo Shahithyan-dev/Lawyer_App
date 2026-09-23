@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, SafeAreaView, ScrollView, TouchableOpacity,
+  View, Text, ScrollView, TouchableOpacity,
   ActivityIndicator, Alert, Linking, Modal, TextInput, FlatList
 } from 'react-native';
-import { ChevronLeft, FileText, Calendar, Clock, MapPin, Phone, Mail, User, Briefcase, Check, Plus, Edit2, Download, ExternalLink, Activity, ChevronDown, Paperclip, Save, Users } from 'lucide-react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ChevronLeft, FileText, Calendar, Clock, MapPin, Phone, Mail, User, Briefcase, Check, Plus, Edit2, Download, ExternalLink, Activity, ChevronDown, Paperclip, Save, Users, CheckCircle2, CheckCircle, X } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import axios from 'axios';
 import { API_URL } from '../../config/api';
@@ -64,20 +65,37 @@ export default function CaseDetailsScreen({ route, navigation }) {
   const [currentStatus, setCurrentStatus] = useState(caseData?.status || 'Active');
   const [statusLoading, setStatusLoading] = useState(false);
 
-  // ── Assign tab state ──
   const [users, setUsers] = useState([]);
+  const [caseTasks, setCaseTasks] = useState([]);
   const [assignTitle, setAssignTitle] = useState('');
   const [assignDesc, setAssignDesc] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
   const [assignedTo, setAssignedTo] = useState('');
-  const [priority, setPriority] = useState('NORMAL');
+  const [priority, setPriority] = useState('Medium');
   const [selectedFile, setSelectedFile] = useState(null);
   const [assignLoading, setAssignLoading] = useState(false);
 
 
 
   useEffect(() => {
+    axios.get(`${API_URL}/auth/me`)
+      .then(res => {
+        const u = res.data.data || res.data;
+        setCurrentUser(u);
+      })
+      .catch(() => {});
     axios.get(`${API_URL}/users`).then(res => setUsers(res.data)).catch(() => {});
-  }, []);
+    axios.get(`${API_URL}/tasks`).then(res => {
+      const tasks = res.data.data || res.data;
+      if (Array.isArray(tasks)) {
+        const related = tasks.filter(t => {
+          const rid = t.relatedCase?._id ? t.relatedCase._id.toString() : t.relatedCase?.toString();
+          return rid === caseData._id.toString();
+        });
+        setCaseTasks(related);
+      }
+    }).catch(() => {});
+  }, [caseData._id]);
 
   if (!caseData) {
     return <View className="flex-1 justify-center items-center"><Text>No case data found.</Text></View>;
@@ -116,17 +134,31 @@ export default function CaseDetailsScreen({ route, navigation }) {
     }
     setAssignLoading(true);
     try {
-      const fd = new FormData();
-      fd.append('title', assignTitle);
-      fd.append('description', assignDesc);
-      fd.append('caseReference', caseData._id);
-      fd.append('priority', priority);
-      fd.append('status', 'To Do');
-      fd.append('assignedTo', assignedTo);
+      const payload = {
+        title: assignTitle,
+        description: assignDesc,
+        relatedCase: caseData._id,
+        relatedClient: caseData.client?._id,
+        priority: priority,
+        status: 'Pending',
+        assignedTo: assignedTo,
+      };
+
       if (selectedFile) {
-        fd.append('document', { uri: selectedFile.uri, name: selectedFile.name, type: selectedFile.mimeType || 'application/octet-stream' });
+        payload.documentName = selectedFile.name;
+        payload.documentUri = selectedFile.uri;
       }
-      await axios.post(`${API_URL}/tasks`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+      
+      await axios.post(`${API_URL}/tasks`, payload);
+      
+      // Also directly assign the staff member to the case
+      const currentAssignedTo = caseData.assignedTo ? caseData.assignedTo.map(u => u._id || u) : [];
+      if (!currentAssignedTo.includes(assignedTo)) {
+        await axios.put(`${API_URL}/cases/${caseData._id}`, {
+          assignedTo: [...currentAssignedTo, assignedTo]
+        });
+      }
+
       Alert.alert('Assigned!', 'Case has been assigned successfully.', [
         { text: 'OK', onPress: () => { setAssignTitle(''); setAssignDesc(''); setAssignedTo(''); setSelectedFile(null); } }
       ]);
@@ -148,9 +180,10 @@ export default function CaseDetailsScreen({ route, navigation }) {
     }
   })();
 
-  const TABS = ['Details', 'Assign Case'];
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'senior';
+  const TABS = isAdmin ? ['Details', 'Assign Case'] : ['Details'];
   const userOptions = users.map(u => ({ label: `${u.name} (${u.role})`, value: u._id }));
-  const priorityOptions = [{ label: 'LOW', value: 'LOW' }, { label: 'NORMAL', value: 'NORMAL' }, { label: 'HIGH PRIORITY', value: 'HIGH PRIORITY' }];
+  const priorityOptions = [{ label: 'Low', value: 'Low' }, { label: 'Medium', value: 'Medium' }, { label: 'High', value: 'High' }, { label: 'Urgent', value: 'Urgent' }];
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50">
@@ -229,6 +262,24 @@ export default function CaseDetailsScreen({ route, navigation }) {
                 </TouchableOpacity>
               )}
             </View>
+
+            {/* Case Documents */}
+            {caseTasks.some(t => t.documentName) && (
+              <View className="bg-white p-5 rounded-2xl border border-slate-100 mb-4">
+                <Text className="text-base font-bold text-slate-900 mb-4">Attached Documents</Text>
+                {caseTasks.filter(t => t.documentName).map((t, idx) => (
+                  <View key={idx} className="flex-row items-center py-3 border-b border-slate-100">
+                    <View className="w-10 h-10 rounded-full bg-blue-50 items-center justify-center mr-4">
+                      <FileText size={20} color="#2563eb" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="text-[14px] text-slate-700 font-semibold">{t.documentName}</Text>
+                      <Text className="text-[12px] text-slate-500 mt-0.5">From Assignment: {t.title}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            )}
 
             {/* Case Details */}
             <View className="bg-white p-5 rounded-2xl border border-slate-100 mb-4">

@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Users, Mail, Plus } from 'lucide-react-native';
@@ -11,9 +12,13 @@ export default function StaffScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchStaff();
+    }, [])
+  );
 
   const fetchStaff = async () => {
     try {

@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, FlatList } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions, Image, FlatList, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import axios from 'axios';
+import { API_URL } from '../../config/api';
 import { 
   Users, 
   Briefcase, 
@@ -22,6 +25,85 @@ const { width } = Dimensions.get('window');
 export default function DashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState('Activity');
+  const [loading, setLoading] = useState(true);
+  
+  // Dashboard State
+  const [userProfile, setUserProfile] = useState(null);
+  const [metrics, setMetrics] = useState({
+    activeCases: 0,
+    totalClients: 0,
+    totalCases: 0,
+    pendingTasks: 0,
+    hearingsThisWeek: 0,
+    completedCases: 0
+  });
+  const [todaysCases, setTodaysCases] = useState([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, [])
+  );
+
+  const fetchDashboardData = async () => {
+    try {
+      const [casesRes, tasksRes, profileRes] = await Promise.all([
+        axios.get(`${API_URL}/cases`),
+        axios.get(`${API_URL}/tasks`),
+        axios.get(`${API_URL}/auth/me`)
+      ]);
+
+      const casesData = casesRes.data || [];
+      const tasksData = tasksRes.data || [];
+      
+      if (profileRes.data) {
+        setUserProfile(profileRes.data);
+      }
+
+      // Calculate Metrics
+      const activeCases = casesData.filter(c => c.status === 'Open' || c.status === 'In Progress').length;
+      
+      // Get unique clients count from cases (since we don't have a dedicated clients route)
+      const uniqueClients = new Set(casesData.filter(c => c.clientName).map(c => c.clientName)).size;
+      
+      const completedCases = casesData.filter(c => c.status === 'Closed').length;
+      const pendingTasks = tasksData.filter(t => t.status !== 'Completed').length;
+      
+      setMetrics({
+        activeCases,
+        totalClients: uniqueClients > 0 ? uniqueClients : casesData.length, // Fallback if no client names
+        totalCases: casesData.length,
+        pendingTasks,
+        hearingsThisWeek: casesData.filter(c => c.nextHearingDate).length, // simplified for MVP
+        completedCases
+      });
+
+      // Calculate Today's Schedule (mock filtering for MVP based on any cases with upcoming dates)
+      // For real app, we'd check if date is today. Here we just take up to 3 upcoming ones.
+      const upcoming = casesData
+        .filter(c => c.status !== 'Closed')
+        .slice(0, 3)
+        .map((c, index) => {
+          const hours = [10, 12, 14][index % 3];
+          const mins = ['30', '00', '30'][index % 3];
+          return {
+            id: c._id || String(index),
+            time: `${hours}:${mins} ${hours >= 12 ? 'PM' : 'AM'}`,
+            title: c.title,
+            type: c.caseNumber || `CAS-${1000 + index}`,
+            court: c.court || 'District Court',
+            in: `${index + 2}h`,
+            raw: c
+          };
+        });
+        
+      setTodaysCases(upcoming);
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const currentDate = new Date();
   const currentHour = currentDate.getHours();
@@ -72,25 +154,20 @@ export default function DashboardScreen({ navigation }) {
     </TouchableOpacity>
   );
 
-  const todaysCases = [
-    { id: '1', time: '10:30 AM', title: 'Raj Kumar vs State', type: 'CR-1023', court: 'District Court, No. 4', in: '2h' },
-    { id: '2', time: '12:00 PM', title: 'Arun Enterprises vs Suresh', type: 'CIV-2041', court: 'High Court', in: '3.5h' },
-    { id: '3', time: '02:30 PM', title: 'Priya Sharma vs Rohit', type: 'FM-1022', court: 'Family Court', in: '6h' }
-  ];
-
   const carouselRef = React.useRef(null);
   const [currentIndex, setCurrentIndex] = React.useState(0);
 
   React.useEffect(() => {
     const timer = setInterval(() => {
       setCurrentIndex((prevIndex) => {
+        if (!todaysCases || todaysCases.length <= 1) return prevIndex;
         const nextIndex = (prevIndex + 1) % todaysCases.length;
         carouselRef.current?.scrollToIndex({ index: nextIndex, animated: true });
         return nextIndex;
       });
     }, 3000); // Auto slide every 3 seconds
     return () => clearInterval(timer);
-  }, []);
+  }, [todaysCases]);
 
   const renderCarouselItem = ({ item }) => (
     <View className="bg-blue-900 rounded-[20px] p-5 shadow-lg shadow-blue-900/30 elevation-5" style={{ width: width - 48, marginRight: 16 }}>
@@ -112,13 +189,24 @@ export default function DashboardScreen({ navigation }) {
           <MapPin size={12} color="#93c5fd" style={{ marginRight: 6 }} />
           <Text className="text-blue-300 text-[12px]">{item.court}</Text>
         </View>
-        <TouchableOpacity className="flex-row items-center bg-white px-3 py-1.5 rounded-full">
+        <TouchableOpacity 
+          className="flex-row items-center bg-white px-3 py-1.5 rounded-full"
+          onPress={() => navigation.navigate('CaseDetails', { caseData: item.raw })}
+        >
           <Text className="text-blue-900 text-[11px] font-bold mr-1">Details</Text>
           <ArrowRight size={12} color="#2563eb" />
         </TouchableOpacity>
       </View>
     </View>
   );
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-slate-50 justify-center items-center">
+        <ActivityIndicator size="large" color="#2563eb" />
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-slate-50">
@@ -127,7 +215,9 @@ export default function DashboardScreen({ navigation }) {
         <View className="flex-row justify-between items-center">
           <View>
             <Text className="text-sm text-slate-500 font-medium mb-1">{greeting}</Text>
-            <Text className="text-2xl font-extrabold text-slate-900 tracking-tight">Advocate Kumar</Text>
+            <Text className="text-2xl font-extrabold text-slate-900 tracking-tight">
+              {userProfile ? userProfile.name : 'Advocate'}
+            </Text>
           </View>
         </View>
       </View>
@@ -137,23 +227,30 @@ export default function DashboardScreen({ navigation }) {
           
           {/* Auto-Sliding Carousel for Today's Hearings */}
           <View className="mb-6 pl-6">
-            <FlatList
-              ref={carouselRef}
-              data={todaysCases}
-              renderItem={renderCarouselItem}
-              keyExtractor={item => item.id}
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              snapToInterval={width - 48 + 16}
-              decelerationRate="fast"
-              onScrollToIndexFailed={(info) => {
-                const wait = new Promise(resolve => setTimeout(resolve, 500));
-                wait.then(() => {
-                  carouselRef.current?.scrollToIndex({ index: info.index, animated: true });
-                });
-              }}
-            />
+            {todaysCases && todaysCases.length > 0 ? (
+              <FlatList
+                ref={carouselRef}
+                data={todaysCases}
+                renderItem={renderCarouselItem}
+                keyExtractor={item => item.id}
+                horizontal
+                pagingEnabled
+                showsHorizontalScrollIndicator={false}
+                snapToInterval={width - 48 + 16}
+                decelerationRate="fast"
+                onScrollToIndexFailed={(info) => {
+                  if (info.index === null || info.index === undefined || isNaN(info.index)) return;
+                  const wait = new Promise(resolve => setTimeout(resolve, 500));
+                  wait.then(() => {
+                    carouselRef.current?.scrollToIndex({ index: info.index, animated: true });
+                  });
+                }}
+              />
+            ) : (
+              <View className="bg-white rounded-[20px] p-5 shadow-sm border border-slate-100 items-center justify-center py-8" style={{ width: width - 48 }}>
+                <Text className="text-slate-400 font-medium">No upcoming hearings for today</Text>
+              </View>
+            )}
           </View>
 
           {/* Quick Actions Row */}
@@ -168,59 +265,59 @@ export default function DashboardScreen({ navigation }) {
               <View className="flex-1 mx-1.5">
                 <MetricCard 
                   title="Active Cases" 
-                  value="46" 
-                  subtitle="+3 this week" 
+                  value={metrics.activeCases.toString()} 
+                  subtitle="Live cases" 
                   icon={Briefcase} 
                   color="#2563eb" 
                   bg="#eff6ff" 
-                  onPress={() => navigation.navigate('Cases')}
+                  onPress={() => navigation.navigate('Cases', { initialView: 'Cases', initialTab: 'Active' })}
                 />
                 <MetricCard 
                   title="Total Clients" 
-                  value="128" 
-                  subtitle="+12 this month" 
+                  value={metrics.totalClients.toString()} 
+                  subtitle="In system" 
                   icon={Users} 
                   color="#0ea5e9" 
                   bg="#f0f9ff" 
-                  onPress={() => navigation.navigate('Cases')}
+                  onPress={() => navigation.navigate('Cases', { initialView: 'Clients' })}
                 />
                 <MetricCard 
                   title="Total Cases" 
-                  value="324" 
+                  value={metrics.totalCases.toString()} 
                   subtitle="All time" 
                   icon={FileText} 
                   color="#f59e0b" 
                   bg="#fef3c7" 
-                  onPress={() => navigation.navigate('Cases')}
+                  onPress={() => navigation.navigate('Cases', { initialView: 'Cases' })}
                 />
               </View>
               <View className="flex-1 mx-1.5">
                 <MetricCard 
                   title="Pending Tasks" 
-                  value="28" 
-                  subtitle="5 due today" 
+                  value={metrics.pendingTasks.toString()} 
+                  subtitle="To be done" 
                   icon={CheckSquare} 
                   color="#4f46e5" 
                   bg="#eef2ff" 
-                  onPress={() => navigation.navigate('Tasks')}
+                  onPress={() => navigation.navigate('Tasks', { initialFilter: 'Pending' })}
                 />
                 <MetricCard 
                   title="Hearings" 
-                  value="12" 
-                  subtitle="This week" 
+                  value={metrics.hearingsThisWeek.toString()} 
+                  subtitle="Scheduled" 
                   icon={Scale} 
                   color="#8b5cf6" 
                   bg="#f5f3ff" 
-                  onPress={() => {}}
+                  onPress={() => navigation.navigate('Cases', { initialView: 'Cases' })}
                 />
                 <MetricCard 
                   title="Completed Cases" 
-                  value="278" 
-                  subtitle="+15 this year" 
+                  value={metrics.completedCases.toString()} 
+                  subtitle="Closed" 
                   icon={CheckCircle} 
                   color="#10b981" 
                   bg="#d1fae5" 
-                  onPress={() => navigation.navigate('Cases')}
+                  onPress={() => navigation.navigate('Cases', { initialView: 'Cases', initialTab: 'Closed' })}
                 />
               </View>
             </View>
@@ -235,72 +332,47 @@ export default function DashboardScreen({ navigation }) {
 
             <View className="pl-1">
               
-              {/* Schedule Item 1 */}
-              <View className="flex-row">
-                <View className="w-12 items-end pr-4 pt-1">
-                  <Text className="text-[13px] font-bold text-slate-900">10:30</Text>
-                  <Text className="text-[10px] text-slate-500 font-bold">AM</Text>
+              {todaysCases.length === 0 ? (
+                <View className="items-center py-6">
+                  <Text className="text-slate-400 text-[14px]">No scheduled items for today.</Text>
                 </View>
-                <View className="w-5 items-center">
-                  <View className="w-3.5 h-3.5 rounded-full border-2 border-blue-600 items-center justify-center bg-slate-50 mt-1 z-10">
-                    <View className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                  </View>
-                  <View className="w-0.5 flex-1 bg-slate-200 -mt-1 -mb-1 z-0" />
-                </View>
-                <View className="flex-1 pl-4 pb-6">
-                  <View className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm elevation-2">
-                    <View className="flex-row justify-between items-center mb-1.5">
-                      <Text className="text-xs text-blue-600 font-bold mb-1">CR-1023</Text>
-                      <View className="bg-blue-50 px-2 py-1 rounded-lg">
-                        <Text className="text-blue-600 text-[10px] font-bold">Upcoming</Text>
+              ) : (
+                todaysCases.map((item, index) => {
+                  const isLast = index === todaysCases.length - 1;
+                  const colors = ['#2563eb', '#64748b', '#64748b']; // First is blue, rest slate
+                  const color = colors[index % colors.length];
+                  const timeParts = item.time.split(' ');
+                  
+                  return (
+                    <View className="flex-row" key={item.id}>
+                      <View className="w-12 items-end pr-4 pt-1">
+                        <Text className="text-[13px] font-bold text-slate-900">{timeParts[0]}</Text>
+                        <Text className="text-[10px] text-slate-500 font-bold">{timeParts[1]}</Text>
+                      </View>
+                      <View className="w-5 items-center">
+                        <View className={`w-3.5 h-3.5 rounded-full border-2 items-center justify-center bg-slate-50 mt-1 z-10`} style={{ borderColor: color }}>
+                          <View className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+                        </View>
+                        {!isLast && <View className="w-0.5 flex-1 bg-slate-200 -mt-1 -mb-1 z-0" />}
+                      </View>
+                      <View className="flex-1 pl-4 pb-6">
+                        <View className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm elevation-2">
+                          <View className="flex-row justify-between items-center mb-1.5">
+                            <Text className="text-xs font-bold mb-1" style={{ color: color }}>{item.type}</Text>
+                            {index === 0 && (
+                              <View className="bg-blue-50 px-2 py-1 rounded-lg">
+                                <Text className="text-blue-600 text-[10px] font-bold">Upcoming</Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text className="text-[15px] font-bold text-slate-800 mb-1" numberOfLines={1}>{item.title}</Text>
+                          <Text className="text-[13px] text-slate-500">{item.court}</Text>
+                        </View>
                       </View>
                     </View>
-                    <Text className="text-[15px] font-bold text-slate-800 mb-1">Raj Kumar vs State</Text>
-                    <Text className="text-[13px] text-slate-500">District Court</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Schedule Item 2 */}
-              <View className="flex-row">
-                <View className="w-12 items-end pr-4 pt-1">
-                  <Text className="text-[13px] font-bold text-slate-900">12:00</Text>
-                  <Text className="text-[10px] text-slate-500 font-bold">PM</Text>
-                </View>
-                <View className="w-5 items-center">
-                  <View className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 items-center justify-center bg-slate-50 mt-1 z-10">
-                    <View className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                  </View>
-                  <View className="w-0.5 flex-1 bg-slate-200 -mt-1 -mb-1 z-0" />
-                </View>
-                <View className="flex-1 pl-4 pb-6">
-                  <View className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm elevation-2">
-                    <Text className="text-xs text-blue-600 font-bold mb-1">CIV-2041</Text>
-                    <Text className="text-[15px] font-bold text-slate-800 mb-1">Arun Enterprises vs Suresh</Text>
-                    <Text className="text-[13px] text-slate-500">High Court</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Schedule Item 3 */}
-              <View className="flex-row">
-                <View className="w-12 items-end pr-4 pt-1">
-                  <Text className="text-[13px] font-bold text-slate-900">02:30</Text>
-                  <Text className="text-[10px] text-slate-500 font-bold">PM</Text>
-                </View>
-                <View className="w-5 items-center">
-                  <View className="w-3.5 h-3.5 rounded-full border-2 border-slate-300 items-center justify-center bg-slate-50 mt-1 z-10">
-                    <View className="w-1.5 h-1.5 rounded-full bg-slate-300" />
-                  </View>
-                </View>
-                <View className="flex-1 pl-4 pb-6">
-                  <View className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm elevation-2">
-                    <Text className="text-xs text-blue-600 font-bold mb-1">FM-1022</Text>
-                    <Text className="text-[15px] font-bold text-slate-800 mb-1">Priya Sharma vs Rohit</Text>
-                    <Text className="text-[13px] text-slate-500">Family Court</Text>
-                  </View>
-                </View>
-              </View>
+                  );
+                })
+              )}
               
             </View>
 

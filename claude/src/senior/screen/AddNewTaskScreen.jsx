@@ -7,6 +7,7 @@ import { ChevronLeft, CheckSquare, Save, ChevronDown, Check, Paperclip, X } from
 import axios from 'axios';
 import * as DocumentPicker from 'expo-document-picker';
 import { API_URL } from '../../config/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const InputField = ({ label, value, onChangeText, placeholder, required, multiline }) => (
   <View className="mb-4">
@@ -83,7 +84,7 @@ export default function AddNewTaskScreen({ navigation }) {
     title: '',
     description: '',
     caseReference: '',
-    priority: 'NORMAL',
+    priority: 'Medium',
     status: 'To Do',
     assignedTo: '',
     dueDate: ''
@@ -109,14 +110,19 @@ export default function AddNewTaskScreen({ navigation }) {
   };
 
   useEffect(() => {
-    // Fetch cases and users in parallel
+    // Fetch cases, users, and logged-in user in parallel
     Promise.all([
       axios.get(`${API_URL}/cases`),
-      axios.get(`${API_URL}/users`)
+      axios.get(`${API_URL}/users`),
+      AsyncStorage.getItem('user')
     ])
-      .then(([casesRes, usersRes]) => {
+      .then(([casesRes, usersRes, userStr]) => {
         setCases(casesRes.data);
         setUsers(usersRes.data);
+        if (userStr) {
+          const loggedInUser = JSON.parse(userStr);
+          setFormData(prev => ({ ...prev, assignedTo: loggedInUser._id }));
+        }
       })
       .catch(console.error);
   }, []);
@@ -133,29 +139,34 @@ export default function AddNewTaskScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('title', formData.title);
-      formDataToSend.append('description', formData.description);
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        priority: formData.priority,
+        status: formData.status,
+        assignedTo: formData.assignedTo,
+      };
       if (formData.caseReference) {
-        formDataToSend.append('caseReference', formData.caseReference);
+        payload.relatedCase = formData.caseReference;
       }
-      formDataToSend.append('priority', formData.priority);
-      formDataToSend.append('status', formData.status);
-      formDataToSend.append('assignedTo', formData.assignedTo);
-
-      if (selectedFile) {
-        formDataToSend.append('document', {
-          uri: selectedFile.uri,
-          name: selectedFile.name,
-          type: selectedFile.mimeType || 'application/octet-stream',
-        });
+      if (formData.dueDate) {
+        payload.dueDate = formData.dueDate;
       }
 
-      await axios.post(`${API_URL}/tasks`, formDataToSend, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
+      await axios.post(`${API_URL}/tasks`, payload);
+      
+      // Also directly assign the staff member to the case if a case was selected
+      if (formData.caseReference) {
+        const selectedCase = cases.find(c => c._id === formData.caseReference);
+        if (selectedCase) {
+          const currentAssignedTo = selectedCase.assignedTo ? selectedCase.assignedTo.map(u => u._id || u) : [];
+          if (!currentAssignedTo.includes(formData.assignedTo)) {
+            await axios.put(`${API_URL}/cases/${formData.caseReference}`, {
+              assignedTo: [...currentAssignedTo, formData.assignedTo]
+            });
+          }
+        }
+      }
 
       Alert.alert('Success', 'Case assigned successfully!', [
         { text: 'OK', onPress: () => navigation.goBack() }
@@ -174,9 +185,10 @@ export default function AddNewTaskScreen({ navigation }) {
     ...cases.map(c => ({ label: `${c.caseId} - ${c.title}`, value: c._id }))
   ];
   const priorityOptions = [
-    { label: 'LOW', value: 'LOW' },
-    { label: 'NORMAL', value: 'NORMAL' },
-    { label: 'HIGH PRIORITY', value: 'HIGH PRIORITY' },
+    { label: 'Low', value: 'Low' },
+    { label: 'Medium', value: 'Medium' },
+    { label: 'High', value: 'High' },
+    { label: 'Urgent', value: 'Urgent' }
   ];
 
   return (
@@ -230,6 +242,13 @@ export default function AddNewTaskScreen({ navigation }) {
               value={caseOptions.find(o => o.value === formData.caseReference)?.label || ''}
               options={caseOptions}
               onSelect={(val) => handleChange('caseReference', val)}
+            />
+
+            <InputField
+              label="Due Date (YYYY-MM-DD)"
+              placeholder="e.g. 2026-10-15"
+              value={formData.dueDate}
+              onChangeText={(text) => handleChange('dueDate', text)}
             />
 
             <DropdownField
